@@ -2,7 +2,25 @@
   "database": {
     "rules": "database.rules.json"
   },
-  "storage": {
-    "rules": "storage.rules"
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "database.rules.json",
+      "storage.rules",
+      ".firebaserc",
+      ".git",
+      ".gitignore",
+      ".vercel",
+      "node_modules",
+      "server.js",
+      "package.json"
+    ],
+    "headers": [
+      {
+        "source": "**/*.html",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      }
+    ]
   }
 }
