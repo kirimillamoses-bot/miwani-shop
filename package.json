@@ -1,0 +1,11 @@
+{
+  "name": "miwani-shop",
+  "version": "1.0.0",
+  "description": "The Genius Miwani - Glasses Shop",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

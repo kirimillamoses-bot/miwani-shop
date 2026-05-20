@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0c0c1d">
+<title>Admin — The Genius Miwani</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0c0c1d;--surface:rgba(255,255,255,0.06);--border:rgba(255,255,255,0.08);--brand:#06B6D4;--red:#ef4444;--text:#f0f0f5;--text2:#6b6b85;--green:#25D366}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:0 0 100px}
+
+.lock{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px;text-align:center;gap:16px}
+.lock h2{font-size:20px;font-weight:800}
+.lock input{width:100%;max-width:300px;padding:14px;border-radius:14px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:16px;font-family:inherit;text-align:center}
+.lock button{padding:14px 40px;border-radius:14px;border:none;background:var(--brand);color:#0c0c1d;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+.lock .err{color:var(--red);font-size:13px;display:none}
+
+.admin{display:none;max-width:600px;margin:0 auto}
+.admin.show{display:block}
+
+.top{position:sticky;top:0;z-index:50;background:rgba(12,12,29,0.9);backdrop-filter:blur(20px);padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.top h1{font-size:16px;font-weight:800}
+.top .logout{font-size:12px;color:var(--red);font-weight:600;cursor:pointer;background:none;border:none;font-family:inherit}
+
+.nav{display:flex;gap:0;padding:8px 16px;position:sticky;top:50px;z-index:40;background:rgba(12,12,29,0.9);backdrop-filter:blur(16px)}
+.nav button{flex:1;padding:10px;border:none;background:var(--surface);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--border);transition:all 0.2s}
+.nav button:first-child{border-radius:12px 0 0 12px}
+.nav button:last-child{border-radius:0 12px 12px 0}
+.nav button:not(:last-child){border-right:none}
+.nav button.active{background:var(--brand);color:#0c0c1d;border-color:var(--brand)}
+
+.panel{display:none;padding:16px}
+.panel.show{display:block}
+
+.add-btn{width:100%;padding:14px;border-radius:14px;border:2px dashed var(--border);background:transparent;color:var(--brand);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:16px}
+.add-btn:active{transform:scale(0.97)}
+
+.item{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:12px;margin-bottom:10px;display:flex;gap:12px;align-items:center}
+.item-img{width:64px;height:64px;border-radius:10px;overflow:hidden;flex-shrink:0;background:rgba(255,255,255,0.03)}
+.item-img img{width:100%;height:100%;object-fit:cover}
+.item-info{flex:1;min-width:0}
+.item-name{font-size:13px;font-weight:700;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-meta{font-size:11px;color:var(--text2)}
+.item-actions{display:flex;gap:6px;flex-shrink:0}
+.btn-sm{width:32px;height:32px;border-radius:8px;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.btn-edit{background:rgba(6,182,212,0.15);color:var(--brand)}
+.btn-del{background:rgba(239,68,68,0.15);color:var(--red)}
+
+.form-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:flex-end;justify-content:center}
+.form-overlay.open{display:flex}
+.form-sheet{background:#141425;width:100%;max-width:600px;max-height:90vh;border-radius:24px 24px 0 0;overflow-y:auto;padding:20px;animation:slideUp 0.3s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+
+.form-title{font-size:18px;font-weight:800;margin-bottom:16px}
+.field{margin-bottom:14px}
+.field label{font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit}
+.field textarea{height:80px;resize:none}
+
+.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;cursor:pointer;position:relative;overflow:hidden}
+.upload-zone.has-img{padding:0;border:none}
+.upload-zone img{width:100%;height:200px;object-fit:cover;border-radius:12px}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.upload-zone p{font-size:13px;color:var(--text2)}
+.upload-zone .icon{font-size:28px;margin-bottom:6px}
+
+.form-btns{display:flex;gap:10px;margin-top:16px}
+.form-btns button{flex:1;padding:14px;border-radius:14px;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn-save{background:var(--brand);color:#0c0c1d}
+.btn-cancel{background:var(--surface);color:var(--text2);border:1px solid var(--border)}
+
+.loading{text-align:center;padding:40px;color:var(--text2);font-size:13px}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--green);color:white;padding:10px 24px;border-radius:50px;font-size:13px;font-weight:600;z-index:300;animation:toastIn 0.3s ease}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+</style>
+</head>
+<body>
+
+<div class="lock" id="lock">
+  <div style="font-size:40px">&#128083;</div>
+  <h2>Admin Panel</h2>
+  <p style="color:var(--text2);font-size:13px">The Genius Miwani</p>
+  <input type="password" id="pin" placeholder="Weka PIN" autocomplete="off">
+  <button id="login-btn">Ingia</button>
+  <div class="err" id="err">PIN si sahihi</div>
+</div>
+
+<div class="admin" id="admin">
+  <div class="top">
+    <h1>&#128083; Admin</h1>
+    <button class="logout" id="logout-btn">Toka</button>
+  </div>
+
+  <div class="nav" id="nav">
+    <button class="active" data-tab="products">Miwani</button>
+    <button data-tab="customers">Wateja</button>
+    <button data-tab="delivery">Delivery</button>
+  </div>
+
+  <div class="panel show" id="panel-products">
+    <button class="add-btn" id="add-product-btn">+ Ongeza Miwani</button>
+    <div id="products-list"><div class="loading">Inapakia...</div></div>
+  </div>
+
+  <div class="panel" id="panel-customers">
+    <button class="add-btn" id="add-customer-btn">+ Ongeza Picha ya Mteja</button>
+    <div id="customers-list"><div class="loading">Inapakia...</div></div>
+  </div>
+
+  <div class="panel" id="panel-delivery">
+    <button class="add-btn" id="add-delivery-btn">+ Ongeza Picha ya Delivery</button>
+    <div id="delivery-list"><div class="loading">Inapakia...</div></div>
+  </div>
+</div>
+
+<div class="form-overlay" id="form-overlay">
+  <div class="form-sheet" id="form-sheet"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+import { getDatabase, ref, onValue, push, remove, update } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-database.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyCeVDSXg_ybYZrjbrL-ccJCakJAJzCM5lw",
+  authDomain: "genius-miwani.firebaseapp.com",
+  databaseURL: "https://genius-miwani-default-rtdb.firebaseio.com",
+  projectId: "genius-miwani",
+  storageBucket: "genius-miwani.firebasestorage.app",
+  appId: "1:280022808915:web:0e1cbacf1d21119b6ec9a6"
+});
+
+const db = getDatabase(app);
+const ADMIN_PIN = "genius2024";
+
+let products = {};
+let customerProofs = {};
+let deliveryProofs = {};
+let _selectedFile = null;
+
+// ---- AUTH ----
+const pinInput = document.getElementById("pin");
+const errEl = document.getElementById("err");
+
+function tryLogin() {
+  if (pinInput.value === ADMIN_PIN) {
+    localStorage.setItem("miwani_admin", "1");
+    showAdmin();
+  } else {
+    errEl.style.display = "block";
+    pinInput.value = "";
+    pinInput.focus();
+  }
+}
+
+function showAdmin() {
+  document.getElementById("lock").style.display = "none";
+  document.getElementById("admin").classList.add("show");
+}
+
+document.getElementById("login-btn").addEventListener("click", tryLogin);
+pinInput.addEventListener("keydown", e => { if (e.key === "Enter") tryLogin(); });
+document.getElementById("logout-btn").addEventListener("click", () => {
+  localStorage.removeItem("miwani_admin");
+  location.reload();
+});
+
+if (localStorage.getItem("miwani_admin") === "1") showAdmin();
+
+// ---- TABS ----
+document.getElementById("nav").addEventListener("click", e => {
+  if (!e.target.dataset.tab) return;
+  document.querySelectorAll(".nav button").forEach(b => b.classList.remove("active"));
+  e.target.classList.add("active");
+  document.querySelectorAll(".panel").forEach(p => p.classList.remove("show"));
+  document.getElementById("panel-" + e.target.dataset.tab).classList.add("show");
+});
+
+// ---- DATA LISTENERS ----
+onValue(ref(db, "products"), snap => {
+  products = snap.val() || {};
+  renderProducts();
+});
+
+onValue(ref(db, "proofs/customers"), snap => {
+  customerProofs = snap.val() || {};
+  renderProofs(customerProofs, "customers-list", "customers");
+});
+
+onValue(ref(db, "proofs/delivery"), snap => {
+  deliveryProofs = snap.val() || {};
+  renderProofs(deliveryProofs, "delivery-list", "delivery");
+});
+
+// ---- RENDER ----
+function renderProducts() {
+  const el = document.getElementById("products-list");
+  const entries = Object.entries(products);
+  if (!entries.length) { el.innerHTML = '<div class="loading">Hakuna miwani bado</div>'; return; }
+  el.innerHTML = entries.map(([key, p]) => `
+    <div class="item" data-key="${key}">
+      <div class="item-img"><img src="${p.img}" onerror="this.style.display='none'"></div>
+      <div class="item-info">
+        <div class="item-name">${p.name}</div>
+        <div class="item-meta">${p.cat === "female" ? "Wanawake" : "Wanaume"} &bull; Tsh ${(p.price||0).toLocaleString()}${p.tag ? " &bull; " + p.tag : ""}</div>
+      </div>
+      <div class="item-actions">
+        <button class="btn-sm btn-edit" data-action="edit" data-key="${key}">&#9998;</button>
+        <button class="btn-sm btn-del" data-action="del" data-key="${key}" data-name="${p.name}">&#128465;</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderProofs(data, containerId, type) {
+  const el = document.getElementById(containerId);
+  const entries = Object.entries(data);
+  if (!entries.length) { el.innerHTML = '<div class="loading">Hakuna picha bado</div>'; return; }
+  el.innerHTML = entries.map(([key, p]) => `
+    <div class="item">
+      <div class="item-img"><img src="${p.img}"></div>
+      <div class="item-info"><div class="item-name">${p.caption || "Picha"}</div></div>
+      <div class="item-actions">
+        <button class="btn-sm btn-del" data-action="delproof" data-type="${type}" data-key="${key}">&#128465;</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+// ---- IMAGE COMPRESSION ----
+function compressImage(file, maxW = 600, quality = 0.7) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement("canvas");
+        const ratio = Math.min(maxW / img.width, maxW / img.height, 1);
+        c.width = img.width * ratio;
+        c.height = img.height * ratio;
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        resolve(c.toDataURL("image/jpeg", quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ---- FORMS ----
+const overlay = document.getElementById("form-overlay");
+const sheet = document.getElementById("form-sheet");
+
+function openProductForm(key) {
+  const p = key ? products[key] : null;
+  _selectedFile = null;
+  sheet.innerHTML = `
+    <div class="form-title">${p ? "Hariri Miwani" : "Ongeza Miwani"}</div>
+    <div class="field">
+      <label>Picha</label>
+      <div class="upload-zone ${p?.img ? 'has-img' : ''}" id="upload-zone">
+        ${p?.img ? `<img src="${p.img}" id="preview-img">` : '<div class="icon">&#128247;</div><p>Bonyeza kupakia picha</p>'}
+        <input type="file" id="file-input" accept="image/*">
+      </div>
+    </div>
+    <div class="field"><label>Jina</label><input id="f-name" value="${p?.name || ''}"></div>
+    <div class="field">
+      <label>Kategoria</label>
+      <select id="f-cat"><option value="female" ${p?.cat==='female'?'selected':''}>Wanawake</option><option value="male" ${p?.cat==='male'?'selected':''}>Wanaume</option></select>
+    </div>
+    <div class="field"><label>Bei (Tsh)</label><input type="number" id="f-price" value="${p?.price || 35000}"></div>
+    <div class="field"><label>Tag (optional)</label><input id="f-tag" value="${p?.tag || ''}" placeholder="Mpya, Hot, Premium..."></div>
+    <div class="field"><label>Maelezo</label><textarea id="f-desc">${p?.desc || 'Antiblue • Haibadili rangi ya jua • Inafaa lenzi ya daktari'}</textarea></div>
+    <div class="form-btns">
+      <button class="btn-cancel" id="form-cancel">Ghairi</button>
+      <button class="btn-save" id="form-save" data-key="${key || ''}">Hifadhi</button>
+    </div>
+  `;
+  setupFormEvents("product", key);
+  overlay.classList.add("open");
+}
+
+function openProofForm(type) {
+  const label = type === "customers" ? "Mteja" : "Delivery";
+  _selectedFile = null;
+  sheet.innerHTML = `
+    <div class="form-title">Ongeza Picha ya ${label}</div>
+    <div class="field">
+      <label>Picha</label>
+      <div class="upload-zone" id="upload-zone">
+        <div class="icon">&#128247;</div><p>Bonyeza kupakia picha</p>
+        <input type="file" id="file-input" accept="image/*">
+      </div>
+    </div>
+    <div class="field"><label>Caption (optional)</label><input id="f-caption" placeholder="Mfano: Mteja kutoka Kinondoni"></div>
+    <div class="form-btns">
+      <button class="btn-cancel" id="form-cancel">Ghairi</button>
+      <button class="btn-save" id="form-save" data-type="${type}">Hifadhi</button>
+    </div>
+  `;
+  setupFormEvents("proof", null, type);
+  overlay.classList.add("open");
+}
+
+function setupFormEvents(formType, key, proofType) {
+  const fileInput = sheet.querySelector("#file-input");
+  const zone = sheet.querySelector("#upload-zone");
+  const cancelBtn = sheet.querySelector("#form-cancel");
+  const saveBtn = sheet.querySelector("#form-save");
+
+  zone.addEventListener("click", () => fileInput.click());
+
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    _selectedFile = file;
+    const reader = new FileReader();
+    reader.onload = e => {
+      zone.classList.add("has-img");
+      zone.innerHTML = `<img src="${e.target.result}"><input type="file" id="file-input" accept="image/*" style="position:absolute;inset:0;opacity:0">`;
+      zone.querySelector("input").addEventListener("change", () => {
+        _selectedFile = zone.querySelector("input").files[0];
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+
+  cancelBtn.addEventListener("click", closeForm);
+  overlay.addEventListener("click", e => { if (e.target === overlay) closeForm(); });
+
+  saveBtn.addEventListener("click", async () => {
+    saveBtn.textContent = "Inahifadhi...";
+    saveBtn.disabled = true;
+    try {
+      if (formType === "product") {
+        await saveProduct(key);
+      } else {
+        await saveProof(proofType);
+      }
+    } catch (err) {
+      toast("Kuna tatizo, jaribu tena");
+      saveBtn.textContent = "Hifadhi";
+      saveBtn.disabled = false;
+    }
+  });
+}
+
+function closeForm() {
+  overlay.classList.remove("open");
+  _selectedFile = null;
+}
+
+async function saveProduct(key) {
+  let imgURL = key ? products[key]?.img : "";
+  if (_selectedFile) imgURL = await compressImage(_selectedFile);
+
+  const data = {
+    name: document.getElementById("f-name").value || "Miwani",
+    cat: document.getElementById("f-cat").value,
+    price: parseInt(document.getElementById("f-price").value) || 35000,
+    tag: document.getElementById("f-tag").value,
+    desc: document.getElementById("f-desc").value,
+    img: imgURL
+  };
+
+  if (key) {
+    await update(ref(db, "products/" + key), data);
+  } else {
+    await push(ref(db, "products"), data);
+  }
+  toast("Imehifadhiwa!");
+  closeForm();
+}
+
+async function saveProof(type) {
+  if (!_selectedFile) { toast("Chagua picha kwanza"); return; }
+  const imgURL = await compressImage(_selectedFile);
+  const caption = document.getElementById("f-caption")?.value || "";
+  await push(ref(db, "proofs/" + type), { img: imgURL, caption });
+  toast("Picha imepakiwa!");
+  closeForm();
+}
+
+// ---- EVENT DELEGATION ----
+document.getElementById("add-product-btn").addEventListener("click", () => openProductForm(null));
+document.getElementById("add-customer-btn").addEventListener("click", () => openProofForm("customers"));
+document.getElementById("add-delivery-btn").addEventListener("click", () => openProofForm("delivery"));
+
+document.addEventListener("click", async e => {
+  const btn = e.target.closest("[data-action]");
+  if (!btn) return;
+
+  if (btn.dataset.action === "edit") {
+    openProductForm(btn.dataset.key);
+  } else if (btn.dataset.action === "del") {
+    if (confirm(`Futa "${btn.dataset.name}"?`)) {
+      await remove(ref(db, "products/" + btn.dataset.key));
+      toast("Imefutwa");
+    }
+  } else if (btn.dataset.action === "delproof") {
+    if (confirm("Futa picha hii?")) {
+      await remove(ref(db, "proofs/" + btn.dataset.type + "/" + btn.dataset.key));
+      toast("Imefutwa");
+    }
+  }
+});
+
+function toast(msg) {
+  const t = document.createElement("div");
+  t.className = "toast";
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+</script>
+
+</body>
+</html>
